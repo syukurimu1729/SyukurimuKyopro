@@ -1,7 +1,5 @@
 //using ll = long long;
-//const ll LINF = 1e18;
-
-static constexpr int LINF = numeric_limits<int>::max() / 4;
+//const ll INF = 1e18;
 
 struct StringIndexer {
     string s;          // 元の文字列
@@ -21,7 +19,7 @@ struct StringIndexer {
         n = (int)s.size();
 
         for (int c = 0; c < 26; ++c) {
-            right_pos[c].assign(n, LINF);
+            right_pos[c].assign(n, INF);
             left_pos[c].assign(n, -1);
         }
 
@@ -46,12 +44,12 @@ struct StringIndexer {
 
     // 現在位置 cur から、文字 ch の「右側で一番近い位置」へ移動する
     // cur < 0 のときは「文字列の左外」からスタートしたとみなす
-    // 見つからなければ LINF を返す
+    // 見つからなければ INF を返す
     inline int go_right(int cur, char ch) const {
-        if (n == 0) return LINF;
-        if (cur == LINF) return LINF;
+        if (n == 0) return INF;
+        if (cur == INF) return INF;
         int c = ch - 'a';
-        if (c < 0 || c >= 26) return LINF;
+        if (c < 0 || c >= 26) return INF;
         if (cur < 0) {
             if (s[0] == ch) return 0;
             cur = 0;
@@ -72,7 +70,7 @@ struct StringIndexer {
     // 【部分列判定用ユーティリティ】
     // start の「右」から文字列 t を順にたどれるかを判定する
     // すべてたどれた場合: 最後に一致した位置を返す
-    // 途中で失敗した場合: LINF を返す
+    // 途中で失敗した場合: INF を返す
     //
     // 例:
     //   s = "abac", start = -1, t = "ac"
@@ -83,7 +81,7 @@ struct StringIndexer {
         int cur = start;
         for (char ch : t) {
             cur = go_right(cur, ch);
-            if (cur == LINF) return LINF;
+            if (cur == INF) return INF;
         }
         return cur;
     }
