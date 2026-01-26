@@ -330,6 +330,13 @@ long long reverse_number(long long n, long long base = 10) {
   return reversed_n;
 }
 
+//配列の中央値(n=偶数であれば左側)を返す
+template<class T>
+T median(const vector<T>& a) {
+    int n = a.size();
+    return a[(n - 1) / 2];
+}
+
 //xがl<=x<rに収まっているか
 template<class T>
 bool in(T x, T l, T r){
