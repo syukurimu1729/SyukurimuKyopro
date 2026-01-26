@@ -140,7 +140,7 @@ using qmint = atcoder::modint998244353; //よく使うmint(特に有理数で多
 #define cd(a) (c-'a')
 #define dc(d) (d+'a')
 #define popcnt(x) (__popcount(x)
-#define bitrep(i,n) for(ll i=0;i<(1LL<<(n));i++))
+#define bitrep(i,n) for(ll i=0;i<(1LL<<(n));i++)
 
 inline bool even(ll x){ return x % 2 == 0; }
 inline bool odd(ll x){ return x % 2 != 0; }
