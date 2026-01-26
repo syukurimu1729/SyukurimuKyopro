@@ -850,7 +850,7 @@ long long binary_search_min(long long lo, long long hi, F f) {
 }
 
 
-
+//https://github.com/syukurimu1729/SyukurimuKyopro
 //----------------貼り付けスペース----------------
 
 // ---------- ここまで ----------
