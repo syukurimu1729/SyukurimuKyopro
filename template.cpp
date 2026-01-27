@@ -849,6 +849,24 @@ long long binary_search_min(long long lo, long long hi, F f) {
     return ok+1;
 }
 
+//配列vに対してv[i]の大小比較をして、その結果のindex版を返す
+template<class T>
+vl argsort(const vector<T>& v, bool descending = false){
+    ll n = v.size();
+    vl ids(n);
+    iota(all(ids), 0);
+    if(descending){
+        sort(all(ids), [&](ll i, ll j){
+            return v[i] > v[j];
+        });
+    }else{
+        sort(all(ids), [&](ll i, ll j){
+            return v[i] < v[j];
+        });
+    }
+    return ids;
+}
+
 
 //https://github.com/syukurimu1729/SyukurimuKyopro
 //----------------貼り付けスペース----------------
