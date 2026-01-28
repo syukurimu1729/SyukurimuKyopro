@@ -217,6 +217,12 @@ struct Grid2DGravity {
     typename Grid2D<T>::Proxy operator[](Point p) noexcept { return g[p]; }
     const T& operator[](Point p) const noexcept { return g[p]; }
 
+    // Line 構造体（戻り値）
+    struct Line {
+        T value;
+        vector<Point> cells;
+    };
+
     // --- applyGravity: 各列ごとに下に詰める（破壊的） ---
     // isEmptyPred を渡すと emptyValue は無視される
     template<typename EmptyPred = std::function<bool(const T&)>>
@@ -250,18 +256,18 @@ struct Grid2DGravity {
     // --- findLines: 横/縦の連続した同値列を検出して座標列を返す ---
     // n: 必要個数
     // horiz/vert: 横検出／縦検出
-    // 戻り値: 見つかった各列（vector<Point>）の配列
-    vector<vector<Point>> findLines(int n, bool horiz = true, bool vert = true) const noexcept {
+    // 戻り値: 見つかった各列（Line）を返す
+    vector<Line> findLines(int n, bool horiz = true, bool vert = true) const noexcept {
         auto isEmpty = [&](const T& v){ return v == emptyValue; };
         auto eq = [&](const T& a, const T& b){ return a == b; };
-        vector<vector<Point>> out;
+        vector<Line> out;
         if (n <= 1) {
             if (horiz || vert) {
                 out.reserve(static_cast<typename Grid2D<T>::size_type>(g.height() * g.width()));
                 for (auto y = 0LL; y < g.height(); ++y) {
                     for (auto x = 0LL; x < g.width(); ++x) {
                         const T &v = g[{x,y}];
-                        if (!isEmpty(v)) out.push_back(vector<Point>{ Point{static_cast<long long>(x), static_cast<long long>(y)} });
+                        if (!isEmpty(v)) out.push_back(Line{v, vector<Point>{ Point{static_cast<long long>(x), static_cast<long long>(y)} }});
                     }
                 }
             }
@@ -278,16 +284,19 @@ struct Grid2DGravity {
                 size_type base = y * W;
                 size_type x = 0;
                 while (x < W) {
-                    const T &startVal = g.raw()[base + x];
-                    if (isEmpty(startVal)) { ++x; continue; }
+                    const T &startValRef = g.raw()[base + x];
+                    if (isEmpty(startValRef)) { ++x; continue; }
+                    T startVal = startValRef; // copy value
                     size_type sx = x;
                     size_type ex = x + 1;
                     while (ex < W && !isEmpty(g.raw()[base + ex]) && eq(g.raw()[base + ex], startVal)) ++ex;
                     size_type len = ex - sx;
                     if (static_cast<long long>(len) >= n) {
-                        vector<Point> run; run.reserve(len);
-                        for (size_type tx = sx; tx < ex; ++tx) run.emplace_back(static_cast<long long>(tx), static_cast<long long>(y));
-                        out.emplace_back(std::move(run));
+                        Line ln;
+                        ln.value = startVal;
+                        ln.cells.reserve(len);
+                        for (size_type tx = sx; tx < ex; ++tx) ln.cells.emplace_back(static_cast<long long>(tx), static_cast<long long>(y));
+                        out.emplace_back(std::move(ln));
                     }
                     x = ex;
                 }
@@ -299,16 +308,19 @@ struct Grid2DGravity {
             for (size_type x = 0; x < W; ++x) {
                 size_type y = 0;
                 while (y < H) {
-                    const T &startVal = g.raw()[y * W + x];
-                    if (isEmpty(startVal)) { ++y; continue; }
+                    const T &startValRef = g.raw()[y * W + x];
+                    if (isEmpty(startValRef)) { ++y; continue; }
+                    T startVal = startValRef; // copy
                     size_type sy = y;
                     size_type ey = y + 1;
                     while (ey < H && !isEmpty(g.raw()[ey * W + x]) && eq(g.raw()[ey * W + x], startVal)) ++ey;
                     size_type len = ey - sy;
                     if (static_cast<long long>(len) >= n) {
-                        vector<Point> run; run.reserve(len);
-                        for (size_type ty = sy; ty < ey; ++ty) run.emplace_back(static_cast<long long>(x), static_cast<long long>(ty));
-                        out.emplace_back(std::move(run));
+                        Line ln;
+                        ln.value = startVal;
+                        ln.cells.reserve(len);
+                        for (size_type ty = sy; ty < ey; ++ty) ln.cells.emplace_back(static_cast<long long>(x), static_cast<long long>(ty));
+                        out.emplace_back(std::move(ln));
                     }
                     y = ey;
                 }
@@ -320,15 +332,15 @@ struct Grid2DGravity {
 
     // 任意の等価判定 / 空判定を渡す汎用版
     template<typename EqPred, typename EmptyPred>
-    vector<vector<Point>> findLinesPred(int n, EqPred eq, EmptyPred isEmpty, bool horiz = true, bool vert = true) const noexcept {
-        vector<vector<Point>> out;
+    vector<Line> findLinesPred(int n, EqPred eq, EmptyPred isEmpty, bool horiz = true, bool vert = true) const noexcept {
+        vector<Line> out;
         if (n <= 1) {
             if (horiz || vert) {
                 out.reserve(static_cast<typename Grid2D<T>::size_type>(g.height() * g.width()));
                 for (auto y = 0LL; y < g.height(); ++y) {
                     for (auto x = 0LL; x < g.width(); ++x) {
                         const T &v = g[{x,y}];
-                        if (!isEmpty(v)) out.push_back(vector<Point>{ Point{static_cast<long long>(x), static_cast<long long>(y)} });
+                        if (!isEmpty(v)) out.push_back(Line{v, vector<Point>{ Point{static_cast<long long>(x), static_cast<long long>(y)} }});
                     }
                 }
             }
@@ -344,15 +356,16 @@ struct Grid2DGravity {
                 size_type base = y * W;
                 size_type x = 0;
                 while (x < W) {
-                    const T &startVal = g.raw()[base + x];
-                    if (isEmpty(startVal)) { ++x; continue; }
+                    const T &startValRef = g.raw()[base + x];
+                    if (isEmpty(startValRef)) { ++x; continue; }
+                    T startVal = startValRef;
                     size_type sx = x, ex = x + 1;
                     while (ex < W && !isEmpty(g.raw()[base + ex]) && eq(g.raw()[base + ex], startVal)) ++ex;
                     size_type len = ex - sx;
                     if (static_cast<long long>(len) >= n) {
-                        vector<Point> run; run.reserve(len);
-                        for (size_type tx = sx; tx < ex; ++tx) run.emplace_back(static_cast<long long>(tx), static_cast<long long>(y));
-                        out.emplace_back(std::move(run));
+                        Line ln; ln.value = startVal; ln.cells.reserve(len);
+                        for (size_type tx = sx; tx < ex; ++tx) ln.cells.emplace_back(static_cast<long long>(tx), static_cast<long long>(y));
+                        out.emplace_back(std::move(ln));
                     }
                     x = ex;
                 }
@@ -363,15 +376,16 @@ struct Grid2DGravity {
             for (size_type x = 0; x < W; ++x) {
                 size_type y = 0;
                 while (y < H) {
-                    const T &startVal = g.raw()[y * W + x];
-                    if (isEmpty(startVal)) { ++y; continue; }
+                    const T &startValRef = g.raw()[y * W + x];
+                    if (isEmpty(startValRef)) { ++y; continue; }
+                    T startVal = startValRef;
                     size_type sy = y, ey = y + 1;
                     while (ey < H && !isEmpty(g.raw()[ey * W + x]) && eq(g.raw()[ey * W + x], startVal)) ++ey;
                     size_type len = ey - sy;
                     if (static_cast<long long>(len) >= n) {
-                        vector<Point> run; run.reserve(len);
-                        for (size_type ty = sy; ty < ey; ++ty) run.emplace_back(static_cast<long long>(x), static_cast<long long>(ty));
-                        out.emplace_back(std::move(run));
+                        Line ln; ln.value = startVal; ln.cells.reserve(len);
+                        for (size_type ty = sy; ty < ey; ++ty) ln.cells.emplace_back(static_cast<long long>(x), static_cast<long long>(ty));
+                        out.emplace_back(std::move(ln));
                     }
                     y = ey;
                 }
@@ -401,8 +415,9 @@ int main(){
     cout << "after gravity:\n"; gg.print();
     auto runs = gg.findLines(3, true, true);
     cerr << "found runs: " << runs.size() << "\n";
-    for (auto &r : runs){
-        for (auto &p : r) cerr << p << " ";
+    for (auto &ln : runs){
+        cerr << "value=" << ln.value << " : ";
+        for (auto &p : ln.cells) cerr << p << " ";
         cerr << "\n";
     }
 }
