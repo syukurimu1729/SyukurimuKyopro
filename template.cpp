@@ -867,6 +867,22 @@ vl argsort(const vector<T>& v, bool descending = false){
     return ids;
 }
 
+//res[i]=S[i:]とSの最大共通接頭辞長
+vector<ll> Zalgo(const string &S) {
+    ll N = (ll)S.size();
+    vector<ll> res(N);
+    res[0] = N;
+    ll i = 1, j = 0;
+    while (i < N) {
+        while (i+j < N && S[j] == S[i+j]) ++j;
+        res[i] = j;
+        if (j == 0) {++i; continue;}
+        ll k = 1;
+        while (i+k < N && k+res[k] < j) res[i+k] = res[k], ++k;
+        i += k, j -= k;
+    }
+    return res;
+}
 
 //https://github.com/syukurimu1729/SyukurimuKyopro
 //----------------貼り付けスペース----------------
