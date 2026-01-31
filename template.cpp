@@ -5,7 +5,10 @@
 
 
 int main(){
-    
+    lc(n);
+    vin(n,a);
+    vin(n,b);
+
 }
 
 
@@ -887,13 +890,14 @@ vector<ll> Zalgo(const string &S) {
 //文字列に対して[l,r)のhashを事前計算で構築(2重ハッシュ)
 //RollingHash rh(S);
 //if(rh.get(a,b)==rh.get(c,d)){}
+//int len = A.getLCP(B, k, 0);
 struct RollingHash {
     static const int base1 = 1007, base2 = 2009;
     static const int mod1 = 1000000007, mod2 = 1000000009;
     vector<long long> hash1, hash2, power1, power2;
 
     // construct
-    RollingHash(const string &S) {
+    RollingHash(const vector<long long> &S) {
         int n = (int)S.size();
         hash1.assign(n+1, 0);
         hash2.assign(n+1, 0);
@@ -914,6 +918,30 @@ struct RollingHash {
         long long res2 = hash2[r] - hash2[l] * power2[r-l] % mod2;
         if (res2 < 0) res2 += mod2;
         return {res1, res2};
+    }
+
+    // get lcp of S[a:] and S[b:]
+    inline int getLCP(int a, int b) const {
+        int len = min((int)hash1.size()-a, (int)hash1.size()-b);
+        int low = 0, high = len;
+        while (high - low > 1) {
+            int mid = (low + high) >> 1;
+            if (get(a, a+mid) != get(b, b+mid)) high = mid;
+            else low = mid;
+        }
+        return low;
+    }
+
+    // get lcp of S[a:] and T[b:]
+    inline int getLCP(const RollingHash &T, int a, int b) const {
+        int len = min((int)hash1.size()-a, (int)hash1.size()-b);
+        int low = 0, high = len;
+        while (high - low > 1) {
+            int mid = (low + high) >> 1;
+            if (get(a, a+mid) != T.get(b, b+mid)) high = mid;
+            else low = mid;
+        }
+        return low;
     }
 };
 
